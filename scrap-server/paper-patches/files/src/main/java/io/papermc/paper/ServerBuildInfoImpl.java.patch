@@ -1,0 +1,57 @@
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -21,7 +_,8 @@
+     OptionalInt buildNumber,
+     Instant buildTime,
+     Optional<String> gitBranch,
+-    Optional<String> gitCommit
++    Optional<String> gitCommit, // Scrap - Paper base
++    Optional<String> paperBase // Scrap - Paper base
+ ) implements ServerBuildInfo {
+     private static final String ATTRIBUTE_BRAND_ID = "Brand-Id";
+     private static final String ATTRIBUTE_BRAND_NAME = "Brand-Name";
+@@ -31,6 +_,7 @@
+     private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
+ 
+     private static final String BRAND_PAPER_NAME = "Paper";
++    private static final String BRAND_SCRAP_NAME = "Scrap"; // Scrap - Rebrand
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+@@ -42,9 +_,9 @@
+         this(
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
+                 .map(Key::key)
+-                .orElse(BRAND_PAPER_ID),
++                .orElse(BRAND_SCRAP_ID), // Scrap - Rebrand
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
+-                .orElse(BRAND_PAPER_NAME),
++                .orElse(BRAND_SCRAP_NAME), // Scrap - Rebrand
+             SharedConstants.getCurrentVersion().id(),
+             SharedConstants.getCurrentVersion().name(),
+             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+@@ -55,13 +_,14 @@
+                 .map(Instant::parse)
+                 .orElse(Main.BOOT_TIME),
+             getManifestAttribute(manifest, ATTRIBUTE_GIT_BRANCH),
+-            getManifestAttribute(manifest, ATTRIBUTE_GIT_COMMIT)
++            getManifestAttribute(manifest, ATTRIBUTE_GIT_COMMIT), // Scrap - Paper base
++            getManifestAttribute(manifest, "Paper-Base") // Scrap - Paper base
+         );
+     }
+ 
+     @Override
+     public boolean isBrandCompatible(final @NotNull Key brandId) {
+-        return brandId.equals(this.brandId);
++        return brandId.equals(this.brandId) || brandId.equals(BRAND_PAPER_ID); // Scrap - Rebrand
+     }
+ 
+     @Override
+@@ -93,6 +_,7 @@
+             sb.append('(');
+             sb.append(this.buildTime.truncatedTo(ChronoUnit.SECONDS));
+             sb.append(')');
++            this.paperBase.ifPresent(ref -> sb.append(" (Paper base: ").append(ref).append(')')); // Scrap - Paper base
+         }
+         return sb.toString();
+     }

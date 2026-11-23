@@ -1,0 +1,16 @@
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -18,6 +_,13 @@
+      */
+     Key BRAND_PAPER_ID = Key.key("papermc", "paper");
+ 
++    // Scrap start - Rebrand
++    /**
++     * The brand id for Scrap.
++     */
++    Key BRAND_SCRAP_ID = Key.key("scrap", "scrap");
++    // Scrap end - Rebrand
++
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *

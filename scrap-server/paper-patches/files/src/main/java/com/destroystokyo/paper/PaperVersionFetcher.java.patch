@@ -1,0 +1,96 @@
+--- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -40,10 +_,12 @@
+     private static final ComponentLogger COMPONENT_LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
+     private static final int DISTANCE_ERROR = -1;
+     private static final int DISTANCE_UNKNOWN = -2;
+-    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
+-    private static final String REPOSITORY = "PaperMC/Paper";
++    // Scrap start - Rebrand
++    private static final String REPOSITORY = "JavierFlores09/scrap";
++    private static final String DOWNLOAD_PAGE = "https://github.com/" + REPOSITORY + "/releases";
++    // Scrap end - Rebrand
+     private static final ServerBuildInfo BUILD_INFO = ServerBuildInfo.buildInfo();
+-    private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (https://papermc.io)";
++    private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (https://github.com/" + REPOSITORY + ")"; // Scrap - Rebrand
+     private static final Gson GSON = new Gson();
+ 
+     @Override
+@@ -54,7 +_,7 @@
+     @Override
+     public Component getVersionMessage() {
+         final Component updateMessage;
+-        if (BUILD_INFO.buildNumber().isEmpty() && BUILD_INFO.gitCommit().isEmpty()) {
++        if (BUILD_INFO.gitCommit().isEmpty()) { // Scrap - compare branch commits
+             updateMessage = text("You are running a development version without access to version information", color(0xFF5300));
+         } else {
+             updateMessage = getUpdateStatusMessage();
+@@ -65,22 +_,11 @@
+     }
+ 
+     public static void getUpdateStatusStartupMessage() {
+-        int distance = DISTANCE_ERROR;
+-
+-        final OptionalInt buildNumber = BUILD_INFO.buildNumber();
+-        if (buildNumber.isEmpty() && BUILD_INFO.gitCommit().isEmpty()) {
++        if (BUILD_INFO.gitCommit().isEmpty()) { // Scrap - compare branch commits
+             COMPONENT_LOGGER.warn(text("*** You are running a development version without access to version information ***"));
+         } else {
+             final Optional<MinecraftVersionFetcher> apiResult = fetchMinecraftVersionList();
+-            if (buildNumber.isPresent()) {
+-                distance = fetchDistanceFromSiteApi(buildNumber.getAsInt());
+-            } else {
+-                final Optional<String> gitBranch = BUILD_INFO.gitBranch();
+-                final Optional<String> gitCommit = BUILD_INFO.gitCommit();
+-                if (gitBranch.isPresent() && gitCommit.isPresent()) {
+-                    distance = fetchDistanceFromGitHub(gitBranch.get(), gitCommit.get());
+-                }
+-            }
++            final int distance = scrapDistance(); // Scrap - compare branch commits
+ 
+             switch (distance) {
+                 case DISTANCE_ERROR -> COMPONENT_LOGGER.error(text("*** Error obtaining version information! Cannot fetch version info ***"));
+@@ -108,18 +_,7 @@
+     }
+ 
+     private static Component getUpdateStatusMessage() {
+-        int distance = DISTANCE_ERROR;
+-
+-        final OptionalInt buildNumber = PaperVersionFetcher.BUILD_INFO.buildNumber();
+-        if (buildNumber.isPresent()) {
+-            distance = fetchDistanceFromSiteApi(buildNumber.getAsInt());
+-        } else {
+-            final Optional<String> gitBranch = PaperVersionFetcher.BUILD_INFO.gitBranch();
+-            final Optional<String> gitCommit = PaperVersionFetcher.BUILD_INFO.gitCommit();
+-            if (gitBranch.isPresent() && gitCommit.isPresent()) {
+-                distance = fetchDistanceFromGitHub(gitBranch.get(), gitCommit.get());
+-            }
+-        }
++        final int distance = scrapDistance(); // Scrap - compare branch commits
+ 
+         return switch (distance) {
+             case DISTANCE_ERROR -> text("Error obtaining version information", NamedTextColor.YELLOW);
+@@ -198,6 +_,7 @@
+         return Optional.empty();
+     }
+ 
++    /* // Scrap start - disable Paper build lookup
+     private static int fetchDistanceFromSiteApi(final int jenkinsBuild) {
+         try {
+             final URL buildsUrl = URI.create("https://fill.papermc.io/v3/projects/paper/versions/" + PaperVersionFetcher.BUILD_INFO.minecraftVersionId() + "/builds").toURL();
+@@ -222,6 +_,15 @@
+             return DISTANCE_ERROR;
+         }
+     }
++    */ // Scrap end - disable Paper build lookup
++
++    // Scrap start - compare branch commits for local and CI builds
++    private static int scrapDistance() {
++        final Optional<String> branch = BUILD_INFO.gitBranch();
++        final Optional<String> commit = BUILD_INFO.gitCommit();
++        return branch.isPresent() && commit.isPresent() ? fetchDistanceFromGitHub(branch.get(), commit.get()) : DISTANCE_UNKNOWN;
++    }
++    // Scrap end - compare branch commits
+ 
+     // Contributed by Techcable <Techcable@outlook.com> in GH-65
+     private static int fetchDistanceFromGitHub(final String branch, final String hash) {
