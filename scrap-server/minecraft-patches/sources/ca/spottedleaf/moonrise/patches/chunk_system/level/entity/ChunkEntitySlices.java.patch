@@ -1,0 +1,50 @@
+--- a/ca/spottedleaf/moonrise/patches/chunk_system/level/entity/ChunkEntitySlices.java
++++ b/ca/spottedleaf/moonrise/patches/chunk_system/level/entity/ChunkEntitySlices.java
+@@ -240,21 +_,42 @@
+         this.preventStatusUpdates = prev;
+     }
+ 
++    // Scrap start - Fix entity subsection tick order
+     public void updateStatus(final FullChunkStatus status, final EntityLookup lookup) {
++        final FullChunkStatus oldStatus = this.status;
+         this.status = status;
+ 
+-        final Entity[] entities = this.entities.getRawData();
+-
+-        for (int i = 0, size = this.entities.size(); i < size; ++i) {
++        if (status == FullChunkStatus.ENTITY_TICKING && oldStatus != FullChunkStatus.ENTITY_TICKING) {
++            // Vanilla starts ticking entities in section-key order, with non-negative Y before negative Y.
++            final BasicEntityList<Entity>[] sections = this.allEntities.entitiesBySection;
++            final int nonNegativeStart = Mth.clamp(-this.minSection, 0, sections.length);
++            this.updateSectionStatuses(status, lookup, sections, nonNegativeStart, sections.length);
++            this.updateSectionStatuses(status, lookup, sections, 0, nonNegativeStart);
++        } else {
++            this.updateEntityStatuses(status, lookup, this.entities.getRawData(), this.entities.size());
++        }
++    }
++
++    private void updateSectionStatuses(final FullChunkStatus status, final EntityLookup lookup,
++                                       final BasicEntityList<Entity>[] sections, final int from, final int to) {
++        for (int index = from; index < to; ++index) {
++            final BasicEntityList<Entity> section = sections[index];
++            if (section != null) {
++                this.updateEntityStatuses(status, lookup, section.storage, section.size());
++            }
++        }
++    }
++
++    private void updateEntityStatuses(final FullChunkStatus status, final EntityLookup lookup, final Entity[] entities, final int size) {
++        for (int i = 0; i < size; ++i) {
+             final Entity entity = entities[i];
+-
+             final Visibility oldVisibility = EntityLookup.getEntityStatus(entity);
+             ((ChunkSystemEntity)entity).moonrise$setChunkStatus(status);
+             final Visibility newVisibility = EntityLookup.getEntityStatus(entity);
+-
+             lookup.entityStatusChange(entity, this, oldVisibility, newVisibility, false, false, false);
+         }
+     }
++    // Scrap end - Fix entity subsection tick order
+ 
+     public boolean addEntity(final Entity entity, final int chunkSection) {
+         if (!this.entities.add(entity)) {
