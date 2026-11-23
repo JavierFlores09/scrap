@@ -11,6 +11,10 @@ build
 /paper-server
 /scrap-api/build.gradle.kts
 /paper-api
+/.checkstyle/
+/paper-checkstyle/
+/scrap-api/.checkstyle/
+/scrap-server/.checkstyle/
 /paper-api-generator
 
 .idea/

@@ -11,7 +11,7 @@ plugins {
 
 rootProject.name = "scrap"
 
-for (name in listOf("scrap-api", "scrap-server")) {
+for (name in listOf("scrap-api", "scrap-server", "paper-checkstyle")) {
     include(name)
     file(name).mkdirs()
 }

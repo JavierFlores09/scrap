@@ -1,3 +1,4 @@
+import io.papermc.paperweight.core.tasks.CheckoutRepo
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -19,6 +20,11 @@ paperweight {
             outputFile = file("scrap-api/build.gradle.kts")
             patchFile = file("scrap-api/build.gradle.kts.patch")
         }
+        patchFile {
+            path = "paper-server/.checkstyle/checkstyle.xml"
+            outputFile = file("scrap-server/.checkstyle/checkstyle.xml")
+            patchFile = file("scrap-server/checkstyle.xml.patch")
+        }
         patchDir("paperApi") {
             upstreamPath = "paper-api"
             excludes = setOf("build.gradle.kts")
@@ -26,6 +32,27 @@ paperweight {
             outputDir = file("paper-api")
         }
     }
+}
+
+project(":paper-checkstyle") {
+    layout.buildDirectory = rootProject.layout.buildDirectory.dir("paper-checkstyle")
+}
+
+fun syncPaperDirectory(name: String, source: String, destination: String) =
+    tasks.register<Sync>(name) {
+        from(tasks.named<CheckoutRepo>("checkoutPaperRepo").flatMap { it.outputDir.dir(source) })
+        exclude("build/**")
+        into(layout.projectDirectory.dir(destination))
+    }
+
+val checkstyleInputs = listOf(
+    syncPaperDirectory("syncPaperCheckstyle", "paper-checkstyle", "paper-checkstyle"),
+    syncPaperDirectory("syncCheckstyleRules", ".checkstyle", ".checkstyle"),
+    syncPaperDirectory("syncApiCheckstyleRules", "paper-api/.checkstyle", "scrap-api/.checkstyle"),
+)
+// TODO: figure out a better way to do this, feels dirty but only because task is registered in an afterEvaluate...
+tasks.named { it == "applyPaperPatches" }.configureEach {
+    dependsOn(checkstyleInputs)
 }
 
 subprojects {
